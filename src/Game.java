@@ -2,6 +2,14 @@ public class Game {
     private Room currentRoom;
     private Parser parser;
     private Player player;
+    private Room movieTheatre;
+    private Room mall;
+    private Room inNOut;
+    private Room handels;
+    private Room bookstore;
+    boolean wantToQuit = false;
+    boolean finished = false;
+    Item libraryCard = new Item();
     public Game(){
         parser = new Parser();
         player = new Player();
@@ -12,13 +20,13 @@ public class Game {
         game.play();
     }
     private void createRooms() {
-        Room movieTheatre = new Room("The movie theatre is an old building with only one movie showing. It’s west of In n Out and north of the Mall.", "The movie theatre has one glass door entrance into the concession area. There is a box of milk duds that have fallen on the ground.");
-        Room mall = new Room("This is an abandoned mall. The mall is south of the movie theatre and west of Handel’s.", "The doors to the mall are boarded up. The south side of the building has already been broken into. Once you enter, there are stairs where you entered. There are a pair of car keys. There is an old car.");
-        Room inNOut = new Room ("A fast food restaurant where you can get a chocolate milkshake. It is east of the Movie Theatre, west of the book store, and north of Handel’s.", "In-N-Out sells chocolate shakes that will give you stamina, but you can only use the drive thru.  They will not let you walk through the drive through. You need a car. The drive thru is one the east side of the building.");
-        Room handels = new Room("Handel’s sells all types of ice cream and milkshakes. It is south of In n Out and east of the Mall.", "Handel’s has a very long line. If you give the worker a pair of car keys you can get a library card.  You can get the keys back if you give them milk duds.");
-        Room bookstore = new Room("The bookstore is huge. It is east of In-N-Out.", "There is a long wall of bookshelves. You see a machine where you have to swipe your card.");
+        movieTheatre = new Room("The movie theatre is an old building that is west of In n Out and north of the Mall.", "The movie theatre has one movie showing at a time. There is a box of milk duds that have fallen on the ground.");
+        mall = new Room("This is an abandoned mall. The mall is south of the movie theatre and west of Handel’s.", "The doors to the mall are boarded up, but there is a hole in the building. Once you enter, there are a pair of car keys on the floor, which will let you go to In-N-Out.");
+        inNOut = new Room ("A fast food restaurant where you can get a chocolate milkshake. It is east of the Movie Theatre, west of the book store, and north of Handel’s.", "In-N-Out sells chocolate shakes, but they aren't always good. You can only enter when you drive.  They will not let you walk through the drive thru. You need some car keys.");
+        handels = new Room("Handel’s sells all types of ice cream and sundaes. It is south of In n Out and east of the Mall.", "Handel’s has a very long line. If you wait in that long line you can grab the library card which you need to escape.");
+        bookstore = new Room("The bookstore is huge. It is east of In-N-Out.", "You are in the bookstore. There is a long wall of bookshelves. You see a machine where you have to swipe your card in order to escape.");
 
-        movieTheatre.setExit("east", inNOut);
+
         movieTheatre.setExit("south", mall);
         mall.setExit("north", movieTheatre);
         mall.setExit("east", handels);
@@ -26,8 +34,6 @@ public class Game {
         inNOut.setExit("east", bookstore);
         inNOut.setExit("south", handels);
         handels.setExit("west", mall);
-        handels.setExit("north", inNOut);
-        bookstore.setExit("west", inNOut);
 
         currentRoom = movieTheatre;
 
@@ -35,18 +41,18 @@ public class Game {
         Item milkDuds = new Item();
         Item carKeys = new Item();
         Item milkshake = new Item();
-        Item libraryCard = new Item();
+
 
         int health = 3;
 
-        movieTheatre.setItem("Milk Duds", milkDuds);
-        mall.setItem("car keys", carKeys);
+        movieTheatre.setItem("milkDuds", milkDuds);
+        mall.setItem("carKeys", carKeys);
         inNOut.setItem("milkshake", milkshake);
-        handels.setItem("library card", libraryCard);
+        handels.setItem("libraryCard", libraryCard);
     }
     public void play(){
         printWelcome();
-        boolean finished = false;
+
         while(!finished) {
             Command command = parser.getCommand();
             finished = processCommand(command);
@@ -55,7 +61,7 @@ public class Game {
         System.out.println("Thanks for playing!");
     }
     private boolean processCommand(Command command){
-        boolean wantToQuit = false;
+
         CommandWord commandWord = command.getCommandWord();
 
         switch(commandWord){
@@ -95,9 +101,6 @@ public class Game {
                 swipe(command);
                 break;
 
-            case Health:
-                health(command);
-                break;
         }
         return wantToQuit;
     }
@@ -127,7 +130,7 @@ public class Game {
         String direction = command.getSecondWord();
         Room nextRoom = currentRoom.getExit(direction);
         if (nextRoom ==null){
-            System.out.println("There is no door!");
+            System.out.println("You can't go there!");
         }
         else{
             currentRoom = nextRoom;
@@ -135,34 +138,46 @@ public class Game {
         }
     }
     private void drive(Command command){
-        if(!command.hasSecondWord()){
-            System.out.println("Drive where?");
-            return;
+        if(!player.getInv().containsKey("carKeys")) {
+            System.out.println("You need car keys to drive to In-N-Out.");
+            currentRoom = movieTheatre;
+            System.out.println("You are back in the movie theatre.");
+
         }
-        String direction = command.getSecondWord();
-        Room nextRoom = currentRoom.getExit(direction);
-        if (nextRoom ==null){
-            System.out.println("You can't drive there!");
-        }
-        else{
-            currentRoom = nextRoom;
-            System.out.println(currentRoom.getShortDescription());
+        else {
+
+            handels.setExit("north", inNOut);
+            bookstore.setExit("west", inNOut);
+            movieTheatre.setExit("east", inNOut);
+            if (!command.hasSecondWord()) {
+                System.out.println("Drive where?");
+                return;
+            }
+            String direction = command.getSecondWord();
+            Room nextRoom = currentRoom.getExit(direction);
+            if (nextRoom == null) {
+                System.out.println("You can't drive there!");
+            }
+            else {
+                currentRoom = nextRoom;
+                System.out.println(currentRoom.getShortDescription());
+            }
         }
     }
-    private void drop(Command command){
-        if(!command.hasSecondWord()){
-            System.out.println("Drop what?");
-            return;
-        }
-        String key = command.getSecondWord();
-        Item dropItem = player.getItem(key);
-        if (dropItem ==null){
-            System.out.println("You can't drop that!");
-        }
-        else{
-            currentRoom.setItem(key, dropItem);
-            System.out.println("You dropped " + key);
-        }
+    public void drop(Command command){
+            if (!command.hasSecondWord()) {
+                System.out.println("Drop what?");
+                return;
+            }
+            String key = command.getSecondWord();
+            Item dropItem = player.getItem(key);
+            if (dropItem == null) {
+                System.out.println("You can't drop that!");
+            }
+            else {
+                currentRoom.setItem(key, dropItem);
+                System.out.println("You dropped " + key);
+            }
     }
     private void swipe(Command command){
         if(!command.hasSecondWord()){
@@ -170,20 +185,18 @@ public class Game {
             return;
         }
         String key = command.getSecondWord();
-        Item dropItem = player.getItem(key);
-        if (dropItem ==null){
+        Item swipeItem = player.getItem(key);
+        if (swipeItem != libraryCard){
             System.out.println("You can't swipe that!");
         }
         else{
-            currentRoom.setItem(key, dropItem);
+            currentRoom.setItem(key, swipeItem);
             System.out.println("You swiped " + key);
+            System.out.println("A hidden door opened and now you can escape this city. Good job!");
+            wantToQuit = true;
         }
     }
-    public void health(Command command){
-        System.out.println("Your health is " + player.getHealth());
-        player.setHealth(player.getHealth()) + health.getHealth();
 
-    }
     private void grab(Command command){
         if(!command.hasSecondWord()){
             System.out.println("Grab what?");
@@ -191,12 +204,16 @@ public class Game {
         }
         String key = command.getSecondWord();
         Item grabItem = currentRoom.getItem(key);
-        if (grabItem ==null){
+        if (grabItem == null){
             System.out.println("You can't grab that!");
         }
         else{
             player.setItem(key, grabItem);
             System.out.println("You grabbed " + key);
+            if(player.getInv().containsKey("milkshake")){
+                System.out.println("The milkshake went bad. You died.");
+                wantToQuit = true;
+            }
 
         }
     }
@@ -212,9 +229,9 @@ public class Game {
     private void printWelcome(){
         System.out.println();
         System.out.println("Welcome to my text adventure game!");
-        System.out.println("You will find yourself in a garden maze, desperate to escape!");
+        System.out.println("You will find yourself in a big city, desperate to escape!");
         System.out.println("Type \"help\" if you need assistance.");
         System.out.println();
-        System.out.println("We will print a long room description here.");
+        System.out.println("Go through the city and swipe your library card at the book store to escape. (You need car keys to drive through In-N-Out.)");
     }
 }

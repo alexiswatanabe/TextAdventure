@@ -2,7 +2,9 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.Iterator;
 public class Player {
-int health;
+
+    public Item carKeys;
+    public int health;
     private HashMap<String, Item>inventory;
 
     Player() {
@@ -19,15 +21,18 @@ int health;
     public void setItem(String name, Item item){
         inventory.put(name, item);
     }
-
+    HashMap getInv(){
+        return inventory;
+    }
     public Item getItem(String name){
         return inventory.remove(name);
     }
-    public void setHealth(){
-        int health = 3;
-    }
-    public class getHealth(){
-        return health;
+
+    public boolean hasCarKeys(){
+        return (carKeys != null);
     }
 
+
 }
+
+
